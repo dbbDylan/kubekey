@@ -24,6 +24,7 @@ import (
 	"io"
 	"io/fs"
 	"os"
+	"os/exec"
 	"os/user"
 	"path/filepath"
 	"strings"
@@ -234,7 +235,7 @@ func (c *sshConnector) FetchFile(_ context.Context, src string, dst io.Writer) e
 }
 
 // ExecuteCommand in remote host
-func (c *sshConnector) ExecuteCommand(_ context.Context, cmd string) ([]byte, error) {
+func (c *sshConnector) ExecuteCommand(ctx context.Context, cmd string) ([]byte, error) {
 	klog.V(5).InfoS("exec ssh command", "cmd", cmd, "host", c.Host)
 	// create ssh session
 	session, err := c.client.NewSession()
@@ -244,10 +245,8 @@ func (c *sshConnector) ExecuteCommand(_ context.Context, cmd string) ([]byte, er
 		return nil, err
 	}
 	defer session.Close()
-
-	// command := exec.Command("sudo", "-E", c.shell, "-c", fmt.Sprintf("\"%s\"", cmd))
-	command := fmt.Sprintf("sudo -E %s -c %q", c.shell, cmd)
-	// command := fmt.Sprintf("sudo -E %s -c %q", c.shell, cmd)
+	//nolint:gosec
+	command := exec.CommandContext(ctx, "sudo", "-E", c.shell, "-c", "\"", cmd, "\"")
 	// get pipe from session
 	stdin, _ := session.StdinPipe()
 	stdout, _ := session.StdoutPipe()
@@ -257,7 +256,7 @@ func (c *sshConnector) ExecuteCommand(_ context.Context, cmd string) ([]byte, er
 		return nil, err
 	}
 	// Start the remote command
-	if err := session.Start(command); err != nil {
+	if err := session.Start(command.String()); err != nil {
 		return nil, err
 	}
 	if c.Password != "" {
@@ -293,17 +292,17 @@ func (c *sshConnector) HostInfo(ctx context.Context) (map[string]any, error) {
 	if err != nil {
 		return nil, fmt.Errorf("get kernel version error: %w", err)
 	}
-	osVars[_const.VariableOSKernelVersion] = string(bytes.TrimSuffix(kernel, []byte("\n")))
+	osVars[_const.VariableOSKernelVersion] = string(bytes.TrimSpace(kernel))
 	hn, err := c.ExecuteCommand(ctx, "hostname")
 	if err != nil {
 		return nil, fmt.Errorf("get hostname error: %w", err)
 	}
-	osVars[_const.VariableOSHostName] = string(bytes.TrimSuffix(hn, []byte("\n")))
+	osVars[_const.VariableOSHostName] = string(bytes.TrimSpace(hn))
 	arch, err := c.ExecuteCommand(ctx, "arch")
 	if err != nil {
 		return nil, fmt.Errorf("get arch error: %w", err)
 	}
-	osVars[_const.VariableOSArchitecture] = string(bytes.TrimSuffix(arch, []byte("\n")))
+	osVars[_const.VariableOSArchitecture] = string(bytes.TrimSpace(arch))
 
 	// process information
 	procVars := make(map[string]any)

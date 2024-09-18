@@ -44,17 +44,31 @@ type InventorySpec struct {
 	Groups map[string]InventoryGroup `json:"groups,omitempty"`
 }
 
+// MachineBinding represents the binding information of a host to a machine.
+type MachineBinding struct {
+	Roles   []string `json:"roles,omitempty"`   // e.g., control-plane, worker
+	Machine string   `json:"machine,omitempty"` // the corresponding machine name
+}
+
+// InventoryStatus of Inventory
+type InventoryStatus struct {
+	// HostMachineMapping stores the mapping between inventory hosts and CAPI machines.
+	HostMachineMapping map[string]MachineBinding `json:"hostMachineMapping,omitempty"`
+}
+
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 // +k8s:openapi-gen=true
 // +kubebuilder:resource:scope=Namespaced
+// +kubebuilder:subresource:status
 
 // Inventory store hosts vars for playbook.
 type Inventory struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec InventorySpec `json:"spec,omitempty"`
+	Spec   InventorySpec   `json:"spec,omitempty"`
+	Status InventoryStatus `json:"status,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

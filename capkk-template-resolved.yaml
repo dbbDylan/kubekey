@@ -34,6 +34,10 @@ spec:
     apiVersion: kubekey.kubesphere.io/v1
     kind: Config
     name: "capkk-test-cluster-config"
+  pipelineRef:
+    apiVersion: kubekey.kubesphere.io/v1
+    kind: PipelineTemplate
+    name: "capkk-test-cluster-kkc-pipeline"
   nodeSelectorMode: "Sequence"
   controlPlaneGroupName: "kube_control_plane"
   workerGroupName: "kube_worker"
@@ -50,7 +54,7 @@ spec:
 #    localhost:
 #      connector:
 #        type: local
-    k8s-control-plane-node:
+    k8s-master-node:
       internal_ipv4: 172.31.19.6
       connector:
         type: ssh
@@ -83,7 +87,7 @@ spec:
     # control_plane nodes
     kube_control_plane:
       hosts:
-        - k8s-control-plane-node
+        - k8s-master-node
     # worker nodes
     kube_worker:
       hosts:
@@ -92,7 +96,7 @@ spec:
     # etcd nodes when etcd_deployment_type is external
     etcd:
       hosts:
-        - k8s-control-plane-node
+        - k8s-master-node
 ---
 kind: KubeadmControlPlane
 apiVersion: controlplane.cluster.x-k8s.io/v1beta1
@@ -206,3 +210,36 @@ spec:
     apiserver:
       certSANs:
         - 139.198.121.174
+
+---
+
+apiVersion: kubekey.kubesphere.io/v1
+kind: PipelineTemplate
+metadata:
+  name: "capkk-test-cluster-kkc-pipeline"
+spec:
+  inventoryRef:
+    apiVersion: kubekey.kubesphere.io/v1
+    kind: Inventory
+    name: "capkk-test-cluster-inventory"
+    namespace: default
+  configRef:
+    apiVersion: kubekey.kubesphere.io/v1
+    kind: Config
+    name: "capkk-test-cluster-config"
+    namespace: default
+  jobSpec:
+    workVolume:
+      - name: capkk-playbook
+        persistentVolumeClaim:
+          claimName: capkk-playbook
+      - name: capkk-artifact
+        persistentVolumeClaim:
+          claimName: capkk-artifact
+    volumeMounts:
+      - name: capkk-playbook
+        mountPath: "/root/.ssh"
+        subPath: ".ssh"
+      - name: capkk-artifact
+        mountPath: "/kubekey"
+

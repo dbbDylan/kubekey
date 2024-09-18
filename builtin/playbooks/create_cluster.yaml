@@ -27,7 +27,7 @@
 - hosts:
     - k8s_cluster
   vars_files:
-    - vars/create_cluster_kubernetes.yaml
+    - vars/registry_configuration.yaml
   gather_facts: true
   roles:
     - install/cri

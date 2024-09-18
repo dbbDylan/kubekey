@@ -9,7 +9,7 @@ SHELL:=/usr/bin/env bash
 GO_VERSION ?= 1.22
 GO_CONTAINER_IMAGE ?= docker.io/library/golang:$(GO_VERSION)
 GOARCH ?= $(shell go env GOARCH)
-GOOS ?= $(shell go env GOOS)
+GOOS ?= $(shell go env GOOS)brew
 # Use GOPROXY environment variable if set
 GOPROXY := $(shell go env GOPROXY)
 ifeq ($(GOPROXY),)
@@ -259,15 +259,22 @@ docker-build-operator: ## Build the docker image for operator
 	@$(DOCKER_PUSH) \
 		--build-arg builder_image=$(GO_CONTAINER_IMAGE) \
 		--build-arg goproxy=$(GOPROXY) \
-		--build-arg ldflags="$(LDFLAGS)" --build-arg build_tags="$(BUILDTAGS)" \
+		--build-arg ldflags="$(LDFLAGS)" \
+		--build-arg build_tags="$(BUILDTAGS)" \
 		-f build/controller-manager/Dockerfile -t $(OPERATOR_CONTROLLER_IMG):$(TAG) .
+
+print-vars:
+	@echo "GO_VERSION=$(GO_VERSION)"
+	@echo "GO_CONTAINER_IMAGE=$(GO_CONTAINER_IMAGE)"
+
 
 .PHONY: docker-build-kk
 docker-build-kk: ## Build the docker image for kk
 	@$(DOCKER_PUSH) \
 		--build-arg builder_image=$(GO_CONTAINER_IMAGE) \
 		--build-arg goproxy=$(GOPROXY) \
-		--build-arg ldflags="$(LDFLAGS)" --build-arg build_tags="$(BUILDTAGS)" \
+		--build-arg ldflags="$(LDFLAGS)" \
+		--build-arg build_tags="$(BUILDTAGS)" \
 		-f build/kk/Dockerfile -t $(EXECUTOR_CONTROLLER_IMG):$(TAG) .
 
 

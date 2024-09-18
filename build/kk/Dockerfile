@@ -3,7 +3,7 @@ ARG builder_image
 FROM ${builder_image} as builder
 
 ARG goproxy=https://goproxy.cn,direct
-ENV GOPROXY ${goproxy}
+ENV GOPROXY=${goproxy}
 
 WORKDIR /workspace
 
@@ -20,8 +20,8 @@ COPY ./ ./
 ARG ldflags
 ARG build_tags
 
-ENV LDFLAGS ${ldflags}
-ENV BUILDTAGS ${build_tags}
+ENV LDFLAGS=${ldflags}
+ENV BUILDTAGS=${build_tags}
 
 # Cache the go build into the the Go’s compiler cache folder so we take benefits of compiler caching across docker build calls
 RUN --mount=type=cache,target=/root/.cache/go-build \

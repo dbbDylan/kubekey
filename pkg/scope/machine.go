@@ -106,9 +106,8 @@ func (m *MachineScope) GetProviderID() string {
 }
 
 // SetProviderID sets the KKMachine providerID in spec.
-func (m *MachineScope) SetProviderID(kkMachineID, clusterName string) {
-	providerID := fmt.Sprintf("kk:///%s/%s", clusterName, kkMachineID)
-	m.KKMachine.Spec.ProviderID = ptr.To(providerID)
+func (m *MachineScope) SetProviderID(kkMachineID string) {
+	m.KKMachine.Spec.ProviderID = ptr.To(kkMachineID)
 }
 
 // GetRoles returns the KKMachine roles.

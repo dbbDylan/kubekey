@@ -1,11 +1,19 @@
----
-- hosts:
-    - localhost
-  roles:
-    - init/init-artifact
-
-- hosts:
-    - etcd
-    - k8s_cluster
-  roles:
-    - init/init-os
+#---
+#- name: Binary Install
+#  hosts:
+#    - k8s_cluster
+#    - nfs
+#    - image_registry
+#  gather_facts: true
+#  tasks:
+#    - name: NFS Install
+#      hosts:
+#        - nfs
+#      roles:
+#        - install/nfs
+#
+#    - name: Image Registry Install
+#      hosts:
+#        - image_registry
+#      roles:
+#        - install/image-registry

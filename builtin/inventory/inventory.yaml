@@ -4,9 +4,10 @@ metadata:
   name: default
 spec:
   hosts: # your can set all nodes here. or set nodes on special groups.
-#    localhost:
-#      connector:
-#        type: local
+    localhost:
+      connector:
+        type: local
+        password: d185855610d123
     k8s-master-node:
       internal_ipv4: 172.31.19.6
       connector:

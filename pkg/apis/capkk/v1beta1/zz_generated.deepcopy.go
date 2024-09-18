@@ -99,6 +99,11 @@ func (in *KKClusterSpec) DeepCopyInto(out *KKClusterSpec) {
 		*out = new(v1.ObjectReference)
 		**out = **in
 	}
+	if in.PipelineRef != nil {
+		in, out := &in.PipelineRef, &out.PipelineRef
+		*out = new(v1.ObjectReference)
+		**out = **in
+	}
 	if in.ControlPlaneLoadBalancer != nil {
 		in, out := &in.ControlPlaneLoadBalancer, &out.ControlPlaneLoadBalancer
 		*out = new(KKLoadBalancerSpec)

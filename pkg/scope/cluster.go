@@ -131,6 +131,7 @@ func (s *ClusterScope) PatchObject(ctx context.Context) error {
 		patch.WithOwnedConditions{Conditions: []clusterv1.ConditionType{
 			clusterv1.ReadyCondition,
 			v1beta1.HostsReadyCondition,
+			v1beta1.PreparationReadyCondition,
 			v1beta1.EtcdReadyCondition,
 			v1beta1.BinaryInstallCondition,
 			v1beta1.BootstrapReadyCondition,

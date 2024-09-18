@@ -22,16 +22,36 @@
 - name: Sync external etcd config
   when: and (.kubernetes.etcd.deployment_type | eq "external") (.groups.etcd | default list | len | lt 0)
   block:
+    - name: Fetch etcd ca file from remote
+      fetch:
+        src: /etc/ssl/etcd/ssl/ca.crt
+        dest: |
+          {{ .work_dir }}/kubekey/pki/root.crt
+
+    - name: Fetch etcd cert files from remote
+      fetch:
+        src: /etc/ssl/etcd/ssl/server.crt
+        dest: |
+          {{ .work_dir }}/kubekey/pki/etcd.crt
+
+    - name: Fetch etcd key files from remote
+      fetch:
+        src: /etc/ssl/etcd/ssl/server.key
+        dest: |
+          {{ .work_dir }}/kubekey/pki/etcd.key
+
     - name: Sync etcd ca file to remote
       copy:
         src: |
           {{ .work_dir }}/kubekey/pki/root.crt
         dest: /etc/kubernetes/pki/etcd/ca.crt
+
     - name: Sync etcd cert files to remote
       copy:
         src: |
           {{ .work_dir }}/kubekey/pki/etcd.crt
         dest: /etc/kubernetes/pki/etcd/client.crt
+
     - name: Sync etcd key files to remote
       copy:
         src: |

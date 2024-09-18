@@ -143,6 +143,9 @@ type KKClusterSpec struct {
 	// +optional
 	ConfigRef *corev1.ObjectReference `json:"configRef,omitempty"`
 
+	// ConfigRef is the reference of Pipeline.
+	PipelineRef *corev1.ObjectReference `json:"pipelineRef,omitempty"`
+
 	// ControlPlaneLoadBalancer is optional configuration for customizing control plane behavior.
 	// +optional
 	ControlPlaneLoadBalancer *KKLoadBalancerSpec `json:"controlPlaneLoadBalancer,omitempty"`

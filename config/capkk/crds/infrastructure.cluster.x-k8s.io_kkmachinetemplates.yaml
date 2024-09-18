@@ -52,7 +52,7 @@ spec:
             properties:
               template:
                 description: KKMachineTemplateResource describes the data needed to
-                  create am KKMachine from a template.
+                  create a KKMachine from a template.
                 properties:
                   metadata:
                     description: |-

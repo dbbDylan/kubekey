@@ -1,5 +1,3 @@
-os:
-  architecture: amd64
 cluster_require:
   # the etcd sync duration for 99%.(unit ns)
   etcd_disk_wal_fysnc_duration_seconds: 10000000

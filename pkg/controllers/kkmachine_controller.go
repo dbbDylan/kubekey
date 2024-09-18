@@ -18,10 +18,12 @@ package controllers
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"reflect"
 	"time"
 
+	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
@@ -56,7 +58,7 @@ type KKMachineReconciler struct {
 	MaxConcurrentReconciles int
 }
 
-// +kubebuilder:rbac:groups=infrastructure.cluster.x-k8s.io,resources=kkmachines;kkmachines/status;kkmachines/finalizers,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=infrastructure.cluster.x-k8s.io,resources=*,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=cluster.x-k8s.io,resources=machines;machines/status,verbs=get;list;watch
 // +kubebuilder:rbac:groups="",resources=secrets;,verbs=get;list;watch
 // +kubebuilder:rbac:groups="",resources=namespaces,verbs=get;list;watch
@@ -172,21 +174,19 @@ func (r *KKMachineReconciler) reconcileNormal(ctx context.Context, s *scope.Mach
 		return reconcile.Result{}, nil
 	}
 
-	switch s.KKMachine.Status.Phase {
+	if s.Machine.Spec.Bootstrap.DataSecretName == nil {
+		return reconcile.Result{}, nil
 	}
 
 	if s.IsRole(infrav1beta1.CONTROL_PLANE_ROLE) {
-		// Register instance with control plane load balancer
+		s.KKMachine.Labels[clusterv1.MachineControlPlaneLabel] = "true"
 	}
 
-	if s.IsRole(infrav1beta1.WORKER_ROLE) {
-		// ...
+	if err := refreshProviderID(ctx, r.Client, s); err != nil {
+		return reconcile.Result{}, err
 	}
 
-	if s.GetProviderID() == "" {
-		// TODO: Hope to set as Inventory host
-		s.SetProviderID("123", s.Name())
-	}
+	s.KKMachine.Status.Ready = true
 
 	return ctrl.Result{
 		RequeueAfter: 30 * time.Second,
@@ -198,6 +198,92 @@ func (r *KKMachineReconciler) reconcileDelete(kkMachine *infrav1beta1.KKMachine)
 
 	// Machine is deleted so remove the finalizer.
 	controllerutil.RemoveFinalizer(kkMachine, infrav1beta1.MachineFinalizer)
+}
+
+func refreshProviderID(ctx context.Context, client ctrlclient.Client, s *scope.MachineScope) error {
+	inv, err := GetInventory(ctx, client, s.ClusterScope)
+	if err != nil {
+		return err
+	}
+
+	hostMachineMap := inv.Status.HostMachineMapping
+	if hostMachineMap == nil {
+		err := errors.New("failed to get host machine mapping")
+		klog.V(5).ErrorS(err, "", "Inventory", inv)
+
+		return err
+	}
+
+	// Remove ProviderID if it's not exist in map.
+	if s.KKMachine.Spec.ProviderID != nil {
+		exist := false
+		for _, bindInfo := range hostMachineMap {
+			if bindInfo.Machine == s.Name() {
+				exist = true
+				if !slicesEqualUnordered(bindInfo.Roles, s.KKMachine.Spec.Roles) {
+					s.KKMachine.Spec.ProviderID = nil
+				}
+
+				break
+			}
+		}
+		if !exist {
+			s.KKMachine.Spec.ProviderID = nil
+		}
+	}
+
+	// Add ProviderID if there is an unbound host.
+	if s.KKMachine.Spec.ProviderID == nil {
+		for hn, bindInfo := range hostMachineMap {
+			if bindInfo.Machine != "" || !slicesEqualUnordered(bindInfo.Roles, s.KKMachine.Spec.Roles) {
+				continue
+			}
+
+			// Bind ProviderID
+			s.SetProviderID(hn)
+
+			// Update Inventory
+			expected := inv.DeepCopy()
+			bindInfo.Machine = s.Name()
+			inv.Status.HostMachineMapping[hn] = bindInfo
+			if err := client.Status().Patch(ctx, inv, ctrlclient.MergeFrom(expected)); err != nil {
+				return err
+			}
+
+			break
+		}
+	}
+
+	return nil
+}
+
+func slicesEqualUnordered(a, b []string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+
+	countA := make(map[string]int)
+	countB := make(map[string]int)
+
+	for _, item := range a {
+		countA[item]++
+	}
+
+	for _, item := range b {
+		countB[item]++
+	}
+
+	if len(countA) != len(countB) {
+		return false
+	}
+
+	for key, count := range countA {
+		if countB[key] != count {
+			return false
+		}
+	}
+
+	return true
 }
 
 // SetupWithManager sets up the controller with the Manager.

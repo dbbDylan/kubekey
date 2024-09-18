@@ -21,9 +21,9 @@ export CAPKK_ARTIFACTS_PVC="/var/openebs/local/pvc-b71118d8-7992-4e14-9861-2ad11
 
 # Function for uploading files
 upload_files() {
-    echo ">>> Upload kubekey-1.0.0.tgz to server"
-    scp -P 30001 "${LOCAL_KK_DIR}kubekey-1.0.0.tgz" root@139.198.121.174:"${BINARY}kubekey-1.0.0.tgz"
-    echo ""
+#    echo ">>> Upload kubekey-1.0.0.tgz to server"
+#    scp -P 30001 "${LOCAL_KK_DIR}kubekey-1.0.0.tgz" root@139.198.121.174:"${BINARY}kubekey-1.0.0.tgz"
+#    echo ""
 
     echo ">>> Upload CRDs to server"
     scp -P 30001 -r "${LOCAL_KK_DIR}config/capkk/" root@139.198.121.174:"${CRDS}"
@@ -31,8 +31,8 @@ upload_files() {
     echo ""
 
     echo ">>> Sync playbooks to OpenEBS PVC"
-    rsync -avz --delete -e "ssh -p 30002" "${LOCAL_KK_DIR}_playbooks/" root@139.198.121.174:"${CAPKK_PLAYBOOK_PVC}playbooks/"
-    rsync -avz --delete -e "ssh -p 30002" "${LOCAL_KK_DIR}_roles/" root@139.198.121.174:"${CAPKK_PLAYBOOK_PVC}roles/"
+    rsync -avz --delete -e "ssh -p 30002" "${LOCAL_KK_DIR}_playbooks/" root@139.198.121.174:"${CAPKK_ARTIFACTS_PVC}playbooks/"
+    rsync -avz --delete -e "ssh -p 30002" "${LOCAL_KK_DIR}_roles/" root@139.198.121.174:"${CAPKK_ARTIFACTS_PVC}roles/"
     echo ""
 }
 
@@ -62,7 +62,7 @@ update_template() {
     envsubst < ${LOCAL_KK_DIR}capkk-template.yaml > ${LOCAL_KK_DIR}capkk-template-resolved.yaml
     scp -P 30001 "${LOCAL_KK_DIR}capkk-template-resolved.yaml" root@139.198.121.174:"${REMOTE_KK_DIR}capkk-template.yaml"
 
-    ssh -p 30001 root@139.198.121.174 "kubectl apply -f ${REMOTE_KK_DIR}capkk-template.yaml"
+#    ssh -p 30001 root@139.198.121.174 "kubectl apply -f ${REMOTE_KK_DIR}capkk-template.yaml"
 }
 
 # Main steps

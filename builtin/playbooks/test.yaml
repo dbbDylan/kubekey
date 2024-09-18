@@ -1,0 +1,16 @@
+---
+- name: Test Playbook
+  hosts: etcd
+  gather_facts: true
+  ignore_errors: true
+  tasks:
+    - name: Test Multi Command Task
+      command: |
+        if [ -d /tmp/kubekey ]; then
+          rm -rf /tmp/kubekey
+        fi
+        mkdir -m 777 -p /tmp/kubekey
+    - name: Test Single Command Task
+      command: |
+        uname -r
+      register: kernel_version
