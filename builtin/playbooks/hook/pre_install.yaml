@@ -11,7 +11,10 @@
         dest: |
           /etc/kubekey/scripts/pre_install_{{ .inventory_name }}.sh
         mode: 0755
+      register: execute_result
+
     - name: Execute pre install scripts
+      when: .execute_result.stderr | eq ""
       command: |
         for file in /etc/kubekey/scripts/pre_install_*.sh; do
           if [ -f $file ]; then

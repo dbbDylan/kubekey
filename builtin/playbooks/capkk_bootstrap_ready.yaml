@@ -1,0 +1,33 @@
+---
+- name: BootStrap Ready
+  hosts:
+    - kube_control_plane
+    - kube_worker
+  tasks:
+    - name: Kubernetes Install
+      hosts:
+        - k8s_cluster
+      vars_files:
+        - vars/registry_configuration.yaml
+      gather_facts: true
+      roles:
+        - install/cri
+        - install/kubernetes
+
+    - name: Certs Distribution
+      hosts:
+        - kube_control_plane
+      roles:
+        - role: install/certs
+          when: .renew_certs.enabled
+
+    - name: Install CNI
+      hosts:
+        - kube_control_plane|random
+      roles:
+        - addons/cni
+        - addons/kata
+        - addons/nfd
+        - addons/sc
+
+- import_playbook: hook/post_install.yaml

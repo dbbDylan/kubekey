@@ -31,8 +31,8 @@
 - include_tasks: pki.yaml
   tags: ["certs"]
 
-- name: Chown work_dir to sudo
-  tags: ["always"]
-  ignore_errors: yes
-  command: |
-    chown -R ${SUDO_UID}:${SUDO_GID} {{ .work_dir }}
+#- name: Chown work_dir to sudo
+#  tags: ["always"]
+#  ignore_errors: yes
+#  command: |
+#    chown -R ${SUDO_UID}:${SUDO_GID} {{ .work_dir }}
