@@ -26,3 +26,9 @@
     - localhost
   roles:
     - init/init-artifact
+
+- name: Generate Certs
+  hosts:
+    - localhost
+  roles:
+    - init/init-cert

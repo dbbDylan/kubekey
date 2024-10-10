@@ -4,7 +4,7 @@
     - all
   tasks:
     - name: Copy pre install scripts to remote
-      ignore_errors: yes
+      ignore_errors: true
       copy:
         src: |
           {{ .work_dir }}/scripts/pre_install_{{ .inventory_name }}.sh

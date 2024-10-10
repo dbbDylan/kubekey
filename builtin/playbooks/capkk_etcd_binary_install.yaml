@@ -1,9 +1,9 @@
 ---
-- name: ETCD Binary Install
+- name: ETCD Binary Install Pre-Check
   hosts:
     - etcd
   gather_facts: true
-  var_files:
+  vars_files:
     - vars/cluster_requirements.yaml
   tasks:
     - name: Stop if arch supported
@@ -18,7 +18,25 @@
         fail_msg: "{{ .os.architecture }} is not a known arch"
       register: binary_type
 
-    - name: ETCD Binary Install
-      gather_facts: true
-      roles:
-        - install/etcd
+# TODO: 需要讨论一个比较合适的 Install 流程，要统一安装目录等等
+#- name: ETCD Binary Download
+#  hosts:
+#    - etcd
+#  tags: ["etcd"]
+#  vars_files:
+#    - vars/init_artifact.yaml
+#  pre_tasks:
+#    - name: Create Directory
+#      tags: [ "always" ]
+#      command: |
+#        if [ ! -d "{{ .work_dir }}" ]; then
+#          mkdir -p {{ .work_dir }}/kubekey
+#        fi
+#  roles:
+#    - capkk/download/curl/etcd
+
+- name: ETCD Binary Install
+  hosts:
+    - etcd
+  roles:
+    - install/etcd

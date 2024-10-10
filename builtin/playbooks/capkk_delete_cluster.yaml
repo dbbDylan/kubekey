@@ -1,108 +1,18 @@
 ---
-- name: Uninstall Kubernetes Cluster
-  hosts: all
-  become: yes
-  gather_facts: no
-  tasks:
-    - name: Check if node is a control plane
-      stat:
-        path: /etc/kubernetes/manifests/kube-apiserver.yaml
-      register: is_control_plane
+- name: Delete Kubernetes
+  hosts:
+    - k8s_cluster
+  roles:
+    - capkk/kubernetes
 
-    - name: Stop and disable kubelet service
-      systemd:
-        name: kubelet
-        state: stopped
-        enabled: no
+- name: Delete Network
+  hosts:
+    - k8s_cluster
+  roles:
+    - capkk/network
 
-    - name: Reset kubeadm (if installed)
-      shell: kubeadm reset -f
-      ignore_errors: true
-
-    - name: Remove Kubernetes directories
-      file:
-        path: "{{ item }}"
-        state: absent
-      with_items:
-        - /etc/kubernetes/
-        - /var/lib/kubelet/
-        - /var/lib/etcd/
-        - /etc/cni/net.d/
-        - /var/lib/cni/
-
-    - name: Flush iptables rules
-      command: iptables -F
-
-    - name: Delete iptables chains
-      command: iptables -X
-
-    - name: Flush iptables NAT table
-      command: iptables -t nat -F
-
-    - name: Delete iptables NAT table chains
-      command: iptables -t nat -X
-
-    - name: Flush iptables mangle table
-      command: iptables -t mangle -F
-
-    - name: Delete iptables mangle table chains
-      command: iptables -t mangle -X
-
-    - name: Flush iptables raw table
-      command: iptables -t raw -F
-
-    - name: Delete iptables raw table chains
-      command: iptables -t raw -X
-
-    - name: Clear IPVS rules
-      command: ipvsadm -C
-      ignore_errors: true
-
-    - name: Set ip_forward to 1
-      sysctl:
-        name: net.ipv4.ip_forward
-        value: 1
-        state: present
-
-    - name: Enable bridge-nf-call-iptables
-      sysctl:
-        name: net.bridge.bridge-nf-call-iptables
-        value: 1
-        state: present
-
-    - name: Enable bridge-nf-call-ip6tables
-      sysctl:
-        name: net.bridge.bridge-nf-call-ip6tables
-        value: 1
-        state: present
-
-    - name: Remove CNI plugins
-      file:
-        path: /opt/cni/bin
-        state: absent
-
-    - name: Purge Kubernetes packages
-      apt:
-        name: "{{ item }}"
-        state: absent
-        purge: yes
-      with_items:
-        - kubelet
-        - kubectl
-        - kubeadm
-
-    - name: Autoremove unused packages
-      apt:
-        name: "*"
-        state: latest
-        autoremove: yes
-
-    - name: Autoclean package cache
-      apt:
-        autoclean: yes
-
-    - name: Remove etcd data (for control plane nodes only)
-      file:
-        path: /var/lib/etcd
-        state: absent
-      when: is_control_plane.stat.exists
+- name: Delete ETCD
+  hosts:
+    - etcd
+  roles:
+    - capkk/etcd

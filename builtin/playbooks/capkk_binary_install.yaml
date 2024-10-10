@@ -1,19 +1,14 @@
 ---
-- name: Binary Install
+- name: NFS Install
   hosts:
-    - k8s_cluster
     - nfs
-    - image_registry
   gather_facts: true
-  tasks:
-    - name: NFS Install
-      hosts:
-        - nfs
-      roles:
-        - install/nfs
+  roles:
+    - install/nfs
 
-    - name: Image Registry Install
-      hosts:
-        - image_registry
-      roles:
-        - install/image-registry
+#- name: Image Registry Install
+#  hosts:
+#    - image_registry
+#  gather_facts: true
+#  roles:
+#    - install/image-registry
